@@ -308,7 +308,8 @@ try {
 }
 
 /* good use case for headers is checking whether the content type is correct before I process it further 
-fetches data from a url specified by a Request object and ensures that the fetch data is in JSON format */
+fetches data from a url specified by a Request object and ensures that the fetch data is in JSON format 
+before attempting to parse it */
 
 // request is a Request object that configures the HTTP request
 async function fetchJSON(request) {
@@ -317,13 +318,117 @@ async function fetchJSON(request) {
     waits for the fetch to complete and assigns the resulting Respose object to the variable response
     this Response object contains all the details about the response from the server */
     const response = await fetch(request);
+
+    // retrieves the Content-Type header from the response
     const contentType = response.headers.get("content-type");
+
+    // checks if the contentType is not present or does not include the substring "application/json"
     if (!contentType || !contentType.includes("application/json")) {
+      /* if either condition is true, throws a TypeError with a message saying that the expected JSON was not returned */
       throw new TypeError("Oops, we haven't got JSON!");
     }
+
+    /* parses the JSON content of the response body,
+    .json() returns a promise that resolves with the result of parsing the body text as JSON */
     const jsonData = await response.json();
+
     // process your data further
   } catch (error) {
     console.error("Error:", error);
   }
 }
+
+/* headers can be sent in request and received in responses, they have limitations about what information can and should be mutable
+the guard proeprty controls how and whether certain headers can be modified 
+none: default
+request: guard for a headers object obtained from a request (Request.headers)
+request-no-cors: guard for a headers object obtained from a request created with Request.mode no-cors
+response:  guard for a heasders object obtained from a response (Response.headers)
+immutable: guard that renders a headers object read-only 
+
+
+Response instances are returned when fetch() promises are resolved 
+
+the most common response properties-
+
+Response.status - an integer, default value 200, containing the response status code
+Response.statusText - a string (default value "") which corresponds to the HTTP status code message
+Response.ok - shorthand for checking that status is in the range 200-299 inclusive, returns a boolean value
+
+response properties can be created programmatically via JS, but this is only useful in ServiceWorkers, when
+I am providing a custom response to a received request using a respondWith() method 
+
+
+new Blob object assigned to the myBody variable 
+Blobs are used to represent data that isn't necessarily in a JS-native format 
+this is a placeholder for where the body content would be defined or added later */
+const myBody = new Blob();
+
+/* adds an event listener to the Server Worker's scope that listens for fetch events 
+event is the fetch event that contains information about the request and methods to manipulate the response
+Service Worker - type of web worker that is a JS script that runs in the background of the browser, allowing for 
+                 features that don't need a web page or user interaction; used to intercept and handle network responses,
+                 including programmatically managing a cache of responses 
+                 
+how to use a service worker to intercept and handle fetch events (when a web page makes a network request) */
+addEventListener("fetch", (event) => {
+  /* ServiceWorker intercepting a fetch 
+  this method provides a response to the fetch, allows the service worker to intercept and override the network request
+  with a custom response 
+  = could be for a custom static response
+  - could be a fallback in case the network is unavailable
+  the method takes a promise that resolves to a Response object or directly to a Response object */
+  event.respondWith(
+    /* creates a new Response object that will be returned to the web page or app making the fetch request 
+    myBody is the body of the response */
+    new Response(myBody, {
+      /* configuration object with headers defined, indicating the response body is plain text */
+      headers: { "Content-Type": "text/plain" },
+    })
+  );
+});
+
+/* error() - static method that returns an error response
+redirect() - returns a response resulting in a redirect to a specified URL 
+
+Body - both requests and responses may have body data; a body is an instance of any of the following types
+ArrayBuffer - generic, fixed-length container for binary data 
+TypedArray (UintArray and friends) - group of array-like views; each element is a specific numeric type and has a fixed size in bytes
+DataView - low-level itnerface for reading and writing multiple number types
+Blob - a binary large object, represents immutable raw binary data
+File - interface providing information about files and allows JS in a web page to access their contents 
+String, or a string literal -
+URLSearchParams - utility to help build and manipulate URL query strings
+FormData - obejcts that provide a way to easily construct a set of key/value apris representing form fields and their values, which can then be sent using Fetch API 
+
+Request and Response interfaces share these methods to extract a body; these all return a promise that is eventually resolved 
+with the actual content
+
+Request.arrayBuffer() / Response.arrayBuffer() - returns a promise that resolves with an ArrayButter, representing the response's body as raw binary data, like files or media streams
+Request.blob() / Response.blob() - returns a promise that resolves with a Blob object, representing the response's body as a large amount of raw binary data
+Request.formData() / Response.formData() - returns a promise that resolves with a FormData object, alloe easy extraction of form data sent aas `multipart/form-data` from the server
+Request.json() / Response.json() - returns a promise that resolves with the result of parsing the response body text as JSON
+Request.text() / Response.text() - returns a promise that resolves with a string containing the response's body text
+
+Request bodies can be set by passing body parameters */
+const form = new FormData(document.getElementById("login-form"));
+fetch("/login", {
+  method: "POST",
+  body: form,
+});
+
+/* Fetch API support can be detected by checking for existence of Headers, Request, Response, or fetch() on the Window or Worker scope */
+if (window.fetch) {
+  // run my fetch request here
+} else {
+  // do something with XMLHttpRequest?
+}
+
+/* How Fetch API is different from jQuery.ajax() 
+- promise returned from fetch() won't reject on HTTP errors even if the response is a HTTP 404 or 500
+  instead, as soon as the server responds with headers, the promise with resolve 
+  the promise will only reject on network failue or if anything prevented the request from completing 
+- unless fetch() is called with the credentials option set to include, fetch()
+    won't send cookies in cross-origin requests
+    won't set any cookies sent back in cross-origin responses
+    */
