@@ -632,3 +632,14 @@ async function loadData() {
 }
 
 loadData().catch(dealWithErrors);
+
+/* 5. Node will soon exit the process if my promise is rejected 
+meaning the app will go down */
+process.on("unhandledRejection", (error) => {
+  console.log("unhandledRejection", error);
+});
+
+/* write APIs in promises
+use async/await for flow control 
+convert older APIs with Promisify 
+choose an error handling strategy */
