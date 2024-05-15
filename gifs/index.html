@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Document</title>
+    <title>GIFS Without Async and Await</title>
   </head>
   <body>
     <style>
@@ -23,92 +23,98 @@
       <input type="text" id="keyword" placeholder="Enter search keyword" />
       <div id="error-message">No image data found.</div>
       <button id="search">Search</button>
+      <img src="#" />
+      <button id="refresh">Refresh</button>
     </div>
-    <img src="#" />
-    <button id="refresh">Refresh</button>
     <script>
-      // stores the current url to fetch images
-      let currentUrlWithParams;
+      document.addEventListener("DOMContentLoaded", function () {
+        // stores the current url to fetch images
+        let currentUrlWithParams;
 
-      const input = document.querySelector("input");
+        const input = document.querySelector("input");
 
-      // triggers search for image if search button is clicked
-      document.getElementById("search").addEventListener("click", searchImage);
+        // triggers search for image if search button is clicked
+        document
+          .getElementById("search")
+          .addEventListener("click", searchImage);
 
-      // triggers fetch of another image if the refresh button is clicked
-      document.getElementById("refresh").addEventListener("click", function () {
-        if (currentUrlWithParams) {
-          fetchImage(currentUrlWithParams);
-        }
-      });
+        // triggers fetch of another image if the refresh button is clicked
+        document
+          .getElementById("refresh")
+          .addEventListener("click", function () {
+            if (currentUrlWithParams) {
+              fetchImage(currentUrlWithParams);
+            }
+          });
 
-      // fetches and displays images based on user input from an API
-      function fetchImage(urlWithParams) {
-        const img = document.querySelector("img");
+        // fetches and displays images based on user input from an API
+        function fetchImage(urlWithParams) {
+          const img = document.querySelector("img");
 
-        /* performs a network request to the url constructed with search parameters
+          /* performs a network request to the url constructed with search parameters
         { mode: "cors } option enables Cross-Origin Resource Sharing, allowing this request 
         to work across different domains if permitted by the server*/
-        fetch(urlWithParams, { mode: "cors" })
-          // checks if the HTTP response is successful
-          .then(function (response) {
-            // if not, throws an error with the HTTP status code
-            if (!response.ok) {
-              throw new Error(`HTTP error, status: ${response.status}`);
-            }
+          fetch(urlWithParams, { mode: "cors" })
+            // checks if the HTTP response is successful
+            .then(function (response) {
+              // if not, throws an error with the HTTP status code
+              if (!response.ok) {
+                throw new Error(`HTTP error, status: ${response.status}`);
+              }
 
-            // parses the JSON content of the response
-            return response.json();
-          })
-          .then(function (response) {
-            const errorMessage = document.getElementById("error-message");
+              // parses the JSON content of the response
+              return response.json();
+            })
+            .then(function (response) {
+              const errorMessage = document.getElementById("error-message");
 
-            // checks if necessary data paths are present in the JSON response
-            if (
-              !response.data ||
-              !response.data.images ||
-              !response.data.images.original
-            ) {
-              // if data paths are missing, displays an error message and hides the img
-              errorMessage.style.display = "block";
-              img.style.display = "none";
-              return;
-            }
+              // checks if necessary data paths are present in the JSON response
+              if (
+                !response.data ||
+                !response.data.images ||
+                !response.data.images.original
+              ) {
+                // if data paths are missing, displays an error message and hides the img
+                errorMessage.style.display = "block";
+                img.style.display = "none";
+                return;
+              }
 
-            // if valid, image url is set as the source of the img element to display the image
-            errorMessage.style.display = "none";
-            img.style.display = "block";
-            img.src = response.data.images.original.url;
-          })
+              // if valid, image url is set as the source of the img element to display the image
+              errorMessage.style.display = "none";
+              img.style.display = "block";
+              img.src = response.data.images.original.url;
+            })
 
-          // catches and logs any errors that occur during the fetch operation or processing of the response
-          .catch(function (error) {
-            console.error("Error fetching the image:", error);
-          });
-      }
-
-      // searches and fetches images based on user input from an API
-      function searchImage() {
-        const keyword = input.value.trim();
-
-        // if the input is empty, exit early
-        if (!keyword) {
-          return;
-        } else {
-          const baseUrl = "https://api.giphy.com/v1/gifs/translate";
-
-          // initializes URLSearchParams with parameters
-          const params = new URLSearchParams({
-            api_key: "OIpItY1pYXHfox00EIa3QK57V6wg4S52",
-            s: keyword,
-          });
-
-          // constructs the full url for the API request
-          currentUrlWithParams = `${baseUrl}?${params.toString()}`;
-
-          fetchImage(currentUrlWithParams);
+            // catches and logs any errors that occur during the fetch operation or processing of the response
+            .catch(function (error) {
+              console.error("Error fetching the image:", error);
+            });
         }
-      }
+
+        // searches and fetches images based on user input from an API
+        function searchImage() {
+          const keyword = input.value.trim();
+
+          // if the input is empty, exit early
+          if (!keyword) {
+            return;
+          } else {
+            const baseUrl = "https://api.giphy.com/v1/gifs/translate";
+
+            // initializes URLSearchParams with parameters
+            const params = new URLSearchParams({
+              api_key: "OIpItY1pYXHfox00EIa3QK57V6wg4S52",
+              s: keyword,
+            });
+
+            // constructs the full url for the API request
+            currentUrlWithParams = `${baseUrl}?${params.toString()}`;
+
+            fetchImage(currentUrlWithParams);
+          }
+        }
+      });
     </script>
   </body>
 </html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>GIFS With Async and Await</title>
+  </head>
+  <body>
+    <style>
+      button {
+        display: block;
+      }
+
+      #error-message {
+        display: none;
+      }
+
+      img {
+        display: none;
+      }
+    </style>
+    <h1>GIFS</h1>
+    <div>
+      <input type="text" id="keyword" placeholder="Enter search keyword" />
+      <div id="error-message">No image data found.</div>
+      <button id="search">Search</button>
+      <img src="#" />
+      <button id="refresh">Refresh</button>
+    </div>
+    <script>
+      let currentUrlWithParams;
+
+      const input = document.querySelector("input");
+
+      document.getElementById("search").addEventListener("click", searchImage);
+
+      document.getElementById("refresh").addEventListener("click", function () {
+        if (currentUrlWithParams) {
+          fetchImage(currentUrlWithParams);
+        }
+      });
+
+      // fetches and display images based on user input from an API
+      async function fetchImage(urlWithParams) {
+        const img = document.querySelector("img");
+
+        console.log("Fetching image from:", urlWithParams);
+
+        const errorMessage = document.getElementById("error-message");
+
+        try {
+          // performs a network request to the url constructed with search parameters
+          const response = await fetch(urlWithParams, { mode: "cors" });
+
+          // checks if the HTTP response is successful
+          if (!response.ok) {
+            throw new Error(`HTTP error, status: ${response.status}`);
+          }
+
+          // parses the JSON content of the response
+          const imgData = await response.json();
+
+          // checks if necessary data paths are present in the JSON response
+          if (
+            !imgData.data ||
+            !imgData.data.images ||
+            !imgData.data.images.original
+          ) {
+            console.error("Data paths missing in response");
+
+            // if data paths are missing, displays an error message and hides the img
+            errorMessage.style.display = "block";
+            img.style.display = "none";
+            return;
+          }
+
+          // if valid, hide the error message, image url is set as the source of the img element to display
+          errorMessage.style.display = "none";
+          img.style.display = "block";
+          img.src = imgData.data.images.original.url;
+        } catch (error) {
+          // catches and logs any errors that occur during the fetch operation or processing of the response
+          console.error("Error fetching the image:", error);
+          errorMessage.style.display = "block";
+          errorMessage.textContent = "Failed to load image.";
+          img.style.display = "none";
+        }
+      }
+
+      function searchImage() {
+        const keyword = input.value.trim();
+
+        if (!keyword) {
+          return;
+        } else {
+          const baseUrl = "https://api.giphy.com/v1/gifs/translate";
+
+          const params = new URLSearchParams({
+            api_key: "OIpItY1pYXHfox00EIa3QK57V6wg4S52",
+            s: keyword,
+          });
+
+          currentUrlWithParams = `${baseUrl}?${params.toString()}`;
+
+          console.log(currentUrlWithParams);
+
+          fetchImage(currentUrlWithParams);
+        }
+      }
+    </script>
+  </body>
+</html>
